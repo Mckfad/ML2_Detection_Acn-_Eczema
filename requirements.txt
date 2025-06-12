@@ -3,3 +3,8 @@ torchvision
 streamlit
 Pillow
 scikit-learn
+matplotlib
+os
+cv2
+random
+numpy
