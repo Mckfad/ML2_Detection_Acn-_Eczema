@@ -208,8 +208,8 @@ class_names = ["acne", "eczema"]  # Doit correspondre au modèle entraîné
 model = load_model(model_path, num_classes=len(class_names)) 
 
   
-    # Section de téléchargement d'image
-    col1, col2 = st.columns(2)
+ # Section de téléchargement d'image
+col1, col2 = st.columns(2)
     
     with col1:
         st.subheader("1. Charger une image")
