@@ -202,9 +202,11 @@ def main():
     comme l'acné, l'eczéma et autres affections cutanées.
     """)
     
-    # Chargement du modèle
-    model_path = download_model()
-    class_names = ["acne", "eczema"]  # Doit correspondre au modèle entraîné  
+ # Chargement du modèle
+model_path = download_model()
+class_names = ["acne", "eczema"]  # Doit correspondre au modèle entraîné  
+model = load_model(model_path, num_classes=len(class_names)) 
+
   
     # Section de téléchargement d'image
     col1, col2 = st.columns(2)
