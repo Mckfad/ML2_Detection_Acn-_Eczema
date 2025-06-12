@@ -1,3 +1,18 @@
+import gdown
+
+# Télécharger automatiquement le modèle s’il n’existe pas déjà
+@st.cache_resource
+def download_model():
+    file_id = "1omDDYKCmISTVfFMwUegsfMAH1i30o9aL"
+    url = f"https://drive.google.com/uc?id={file_id}"
+    output = "hybrid_skin_disease_model1.pth"
+    
+    if not os.path.exists(output):
+        with st.spinner("Téléchargement du modèle depuis Google Drive..."):
+            gdown.download(url, output, quiet=False)
+    return output
+
+
 import streamlit as st
 import torch
 from torchvision import transforms
@@ -187,7 +202,8 @@ def main():
     """)
     
     # Chargement du modèle
-    model_path = "https://drive.google.com/file/d/1omDDYKCmISTVfFMwUegsfMAH1i30o9aL/view?usp=drive_link"
+    model_path = "hybrid_skin_disease_model1.pth"
+"
     class_names = ["acne", "eczema"]  # Doit correspondre au modèle entraîné
     
     if not os.path.exists(model_path):
