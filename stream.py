@@ -198,7 +198,7 @@ def main():
                     try:
                         confidences = predict(image, model, class_names)
                         predicted_class, max_confidence = max(confidences.items(), key=lambda x: x[1])
-                        display_class = "Inconnue" if max_confidence < 0.95 else predicted_class.capitalize()
+                        display_class = "Néant" if max_confidence < 0.95 else predicted_class.capitalize()
 
                         st.markdown("<div class='result-box'>", unsafe_allow_html=True)
                         st.subheader("Résultats de diagnostic")
