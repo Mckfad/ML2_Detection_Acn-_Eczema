@@ -187,7 +187,7 @@ def main():
     """)
     
     # Chargement du modèle
-    model_path = "hybrid_skin_disease_model1.pth"
+    model_path = "https://drive.google.com/file/d/1omDDYKCmISTVfFMwUegsfMAH1i30o9aL/view?usp=drive_link"
     class_names = ["acne", "eczema"]  # Doit correspondre au modèle entraîné
     
     if not os.path.exists(model_path):
