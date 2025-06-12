@@ -1,7 +1,7 @@
 import streamlit as st
 import gdown
 
-# Télécharger automatiquement le modèle s’il n’existe pas déjà
+
 @st.cache_resource
 def download_model():
     file_id = "1omDDYKCmISTVfFMwUegsfMAH1i30o9aL"
