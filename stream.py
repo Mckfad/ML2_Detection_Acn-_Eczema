@@ -203,18 +203,8 @@ def main():
     
     # Chargement du modèle
     model_path = download_model()
-    class_names = ["acne", "eczema"]  # Doit correspondre au modèle entraîné
-    
-    if not os.path.exists(model_path):
-        st.error(f"Fichier modèle introuvable: {model_path}")
-        return
-    
-    try:
-        model = load_model(model_path, len(class_names))
-    except Exception as e:
-        st.error(f"Erreur lors du chargement du modèle: {str(e)}")
-        return
-    
+    class_names = ["acne", "eczema"]  # Doit correspondre au modèle entraîné  
+  
     # Section de téléchargement d'image
     col1, col2 = st.columns(2)
     
