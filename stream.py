@@ -202,8 +202,9 @@ def main():
 
                         st.markdown("<div class='result-box'>", unsafe_allow_html=True)
                         st.subheader("Résultats de diagnostic")
+                        color = "green" if display_class == "Néant" else "red"
                         st.markdown(
-                            f"**Diagnostic probable:** <span style='color:#3498db; font-size:1.2em'>{display_class}</span>", 
+                            f"<div style='font-size:25pt; font-weight:bold;'>Diagnostic probable: <span style='color:{color}'>{display_class}</span></div>",
                             unsafe_allow_html=True
                         )
                         st.markdown(f"**Confiance:** {max_confidence*100:.2f}%")
