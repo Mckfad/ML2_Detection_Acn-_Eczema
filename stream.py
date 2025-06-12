@@ -1,7 +1,16 @@
 import streamlit as st
 import gdown
+import torch
+from torchvision import transforms
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+from torch import nn
+import torchvision.models as models
+import os
+import random
 
-
+# Téléchargement du modèle
 @st.cache_resource
 def download_model():
     file_id = "1omDDYKCmISTVfFMwUegsfMAH1i30o9aL"
@@ -12,18 +21,6 @@ def download_model():
         with st.spinner("Téléchargement du modèle depuis Google Drive..."):
             gdown.download(url, output, quiet=False)
     return output
-
-
-
-import torch
-from torchvision import transforms
-from PIL import Image
-import numpy as np
-import matplotlib.pyplot as plt
-from torch import nn
-import torchvision.models as models
-import os
-import random
 
 # Configuration de la page
 st.set_page_config(
@@ -112,7 +109,7 @@ def load_model(model_path, num_classes):
     model.eval()
     return model
 
-# Transformation des images (identique à mod__hybr.py avec visualisation)
+# Transformation des images
 class SkinDiseaseTransform:
     def __init__(self):
         self.base_transform = transforms.Compose([
@@ -121,21 +118,12 @@ class SkinDiseaseTransform:
             transforms.Normalize([0.485, 0.456, 0.406],
                                [0.229, 0.224, 0.225])
         ])
-        self.augmentation = transforms.RandomHorizontalFlip(p=1.0)  # p=1.0 pour la démo
+        self.augmentation = transforms.RandomHorizontalFlip(p=1.0)
     
     def __call__(self, img, apply_augmentation=False):
-        # Applique les transformations de base
         img_resized = img.resize((224, 224))
-        
-        # Applique l'augmentation si demandée (pour la démo)
-        if apply_augmentation:
-            img_flipped = self.augmentation(img_resized)
-        else:
-            img_flipped = img_resized
-        
-        # Conversion en tenseur et normalisation
+        img_flipped = self.augmentation(img_resized) if apply_augmentation else img_resized
         tensor_img = self.base_transform(img_flipped)
-        
         return {
             'original': img,
             'resized': img_resized,
@@ -143,55 +131,37 @@ class SkinDiseaseTransform:
             'tensor': tensor_img
         }
 
-# Fonction pour visualiser les transformations
+# Affichage des transformations
 def show_transformations(transform_results):
     st.subheader("🔍 Prétraitements appliqués")
-    
     with st.container():
         cols = st.columns(3)
-        
         with cols[0]:
-            st.image(transform_results['original'], caption="Image originale",use_container_width=True)
-        
+            st.image(transform_results['original'], caption="Image originale", use_container_width=True)
         with cols[1]:
-            st.image(transform_results['resized'], caption=f"Redimensionnée (224x224)", use_container_width=True)
-        
+            st.image(transform_results['resized'], caption="Redimensionnée (224x224)", use_container_width=True)
         with cols[2]:
-            st.image(transform_results['flipped'], caption="Retournement horizontal",use_container_width=True)
-    
-    # Visualisation de la normalisation
+            st.image(transform_results['flipped'], caption="Retournement horizontal", use_container_width=True)
+
     st.subheader("Normalisation des canaux RGB")
-    
     fig, axes = plt.subplots(1, 3, figsize=(12, 4))
     tensor = transform_results['tensor']
-    
-    for i, (ax, channel, title) in enumerate(zip(
-        axes,
-        ['Rouge', 'Vert', 'Bleu'],
-        ['Canal Rouge', 'Canal Vert', 'Canal Bleu']
-    )):
-        channel_data = tensor[i].numpy()
-        im = ax.imshow(channel_data, cmap='viridis')
+    for i, (ax, channel, title) in enumerate(zip(axes, ['R', 'G', 'B'], ['Canal Rouge', 'Canal Vert', 'Canal Bleu'])):
+        im = ax.imshow(tensor[i].numpy(), cmap='viridis')
         ax.set_title(title)
         ax.axis('off')
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-    
     st.pyplot(fig)
 
-# Fonction de prédiction
+# Prédiction
 def predict(image, model, class_names):
     transform = SkinDiseaseTransform()
-    transformed = transform(image, apply_augmentation=random.random() > 0.5)  # 50% de chance d'appliquer le flip
-    
-    # Affiche les transformations
+    transformed = transform(image, apply_augmentation=random.random() > 0.5)
     show_transformations(transformed)
-    
-    # Prédiction
     with torch.no_grad():
         outputs = model(transformed['tensor'].unsqueeze(0))
         probabilities = torch.nn.functional.softmax(outputs, dim=1)
         confidences = {class_names[i]: float(probabilities[0][i]) for i in range(len(class_names))}
-    
     return confidences
 
 # Interface principale
@@ -201,16 +171,14 @@ def main():
     Cette application utilise une intelligence artificielle avancée pour aider à identifier les maladies de la peau 
     comme l'acné, l'eczéma et autres affections cutanées.
     """)
-    
- # Chargement du modèle
-model_path = download_model()
-class_names = ["acne", "eczema"]  # Doit correspondre au modèle entraîné  
-model = load_model(model_path, num_classes=len(class_names)) 
 
-  
- # Section de téléchargement d'image
-col1, col2 = st.columns(2)
-    
+    # Chargement du modèle
+    model_path = download_model()
+    class_names = ["acne", "eczema"]
+    model = load_model(model_path, num_classes=len(class_names))
+
+    # Téléversement de l'image
+    col1, col2 = st.columns(2)
     with col1:
         st.subheader("1. Charger une image")
         uploaded_file = st.file_uploader(
@@ -218,40 +186,27 @@ col1, col2 = st.columns(2)
             type=["jpg", "jpeg", "png"],
             accept_multiple_files=False
         )
-        
         if uploaded_file is not None:
             image = Image.open(uploaded_file)
-            st.image(image, caption="Image téléversée",use_container_width=True)
-    
+            st.image(image, caption="Image téléversée", use_container_width=True)
+
     with col2:
         if uploaded_file is not None:
             st.subheader("2. Résultats d'analyse")
-            
             if st.button("Analyser l'image", type="primary"):
                 with st.spinner("Analyse en cours..."):
                     try:
-                        # Prédiction avec visualisation des transformations
                         confidences = predict(image, model, class_names)
-                        
-                        # Récupérer la classe prédite et sa confiance
                         predicted_class, max_confidence = max(confidences.items(), key=lambda x: x[1])
-                        
-                        # Si confiance < 95%, on affiche "Inconnue"
-                        if max_confidence < 0.95:
-                            display_class = "Inconnue"
-                        else:
-                            display_class = predicted_class.capitalize()
-                        
-                        # Affichage des résultats
+                        display_class = "Inconnue" if max_confidence < 0.95 else predicted_class.capitalize()
+
                         st.markdown("<div class='result-box'>", unsafe_allow_html=True)
                         st.subheader("Résultats de diagnostic")
-                        
                         st.markdown(
                             f"**Diagnostic probable:** <span style='color:#3498db; font-size:1.2em'>{display_class}</span>", 
                             unsafe_allow_html=True
                         )
                         st.markdown(f"**Confiance:** {max_confidence*100:.2f}%")
-                        
                         st.subheader("Détail des probabilités:")
                         for class_name, confidence in confidences.items():
                             st.write(f"{class_name.capitalize()}")
@@ -260,10 +215,8 @@ col1, col2 = st.columns(2)
                                 <div class="confidence-fill" style="width: {confidence*100}%">{confidence*100:.1f}%</div>
                             </div>
                             """, unsafe_allow_html=True)
-                        
                         st.markdown("</div>", unsafe_allow_html=True)
-                        
-                        # Conseils généraux seulement si confiance >= 95%
+
                         if max_confidence >= 0.95:
                             st.subheader("Conseils")
                             if predicted_class == "acne":
@@ -278,26 +231,22 @@ col1, col2 = st.columns(2)
                                 - Évitez les savons agressifs
                                 - Consultez un médecin pour des traitements topiques
                                 """)
-                        
                     except Exception as e:
                         st.error(f"Une erreur est survenue lors de l'analyse: {str(e)}")
         else:
             st.info("Veuillez téléverser une image pour obtenir un diagnostic")
 
-    # Section d'information
+    # Informations complémentaires
     with st.expander("ℹ️ À propos des prétraitements"):
         st.markdown("""
         **Transformations appliquées:**
-        1. **Redimensionnement:** 224×224 pixels (taille attendue par le modèle)
-        2. **Retournement horizontal:** Augmentation aléatoire des données
+        1. **Redimensionnement:** 224×224 pixels
+        2. **Retournement horizontal:** Augmentation aléatoire
         3. **Normalisation:**
-           - Moyenne: [0.485, 0.456, 0.406] (RGB)
-           - Écart-type: [0.229, 0.224, 0.225] (RGB)
-        
-        **Pourquoi ces transformations?**
-        - Identiques à celles utilisées pendant l'entraînement
-        - Compatibles avec les modèles pré-entraînés (ImageNet)
-        - Améliorent la généralisation du modèle
+           - Moyenne: [0.485, 0.456, 0.406]
+           - Écart-type: [0.229, 0.224, 0.225]
+
+        Ces transformations sont essentielles pour une compatibilité optimale avec les modèles entraînés sur ImageNet.
         """)
 
 if __name__ == "__main__":
