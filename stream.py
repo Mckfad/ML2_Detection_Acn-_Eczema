@@ -1,3 +1,4 @@
+import streamlit as st
 import gdown
 
 # Télécharger automatiquement le modèle s’il n’existe pas déjà
@@ -13,7 +14,7 @@ def download_model():
     return output
 
 
-import streamlit as st
+
 import torch
 from torchvision import transforms
 from PIL import Image
