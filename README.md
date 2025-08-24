@@ -1,0 +1,1 @@
+Ceci n'est juste qu'un dossier ayant permis de deployer l'interface web conçu pour faciliter l'utilisation du modèle de détection de maladie cutanee sur une image. Pour tout détail sur l'entrainement du modèle, cf "
